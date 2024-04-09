@@ -1,13 +1,19 @@
 const express = require("express")
+const app = express()
+
 const cors = require("cors")
 const cookieParser = require("cookie-parser")
-const UserRouter = require("./routes/User")
+const fileUpload = require("express-fileupload")
 
-const app = express()
+// Middlewares
 app.use(express.json())
-app.use(cors())
 app.use(cookieParser())
+app.use(cors())
+app.use(fileUpload({
+    useTempFiles: true,
+    tempFileDir: "/tmp"
+}))
 
-app.use("/", UserRouter)
+// Routes
 
 module.exports = app
