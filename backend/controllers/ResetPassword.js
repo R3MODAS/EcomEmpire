@@ -9,7 +9,7 @@ exports.resetPasswordToken = async (req, res) => {
         // get the email from request body
         const { email } = req.body
 
-        // validation of the data
+        // validation of the email
         if (!email) {
             return res.status(400).json({
                 success: false,
@@ -17,73 +17,79 @@ exports.resetPasswordToken = async (req, res) => {
             })
         }
 
-        // check if the user exists in the db or not   
-        const user = await User.findOne({ email: email })
+        // check if the user exists in the db or not
+        const user = await User.findOne({ email })
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: "User is not registered, please visit the signup page"
+                message: "User is not registered yet, please visit the signup page"
             })
         }
 
-        // generate a token
+        // generate a token using crypto
         const token = crypto.randomUUID()
 
-        // update the user details in the db with token and token expiry
+        // update the token and token expiry in the user model in db
         await User.findOneAndUpdate(
-            { email: email },
+            { email },
             { forgotPasswordToken: token, forgotPasswordTokenExpiry: Date.now() + 5 * 60 * 1000 },
             { new: true }
         )
 
-        // create an url with the token
+        // create an url to send to the user
         const url = `http://localhost:${process.env.PORT}/update-password/${token}`
 
-        // send a mail to the user with this url
-        await mailer(email, "Password Reset by StudyNotion", `Your Link for email verification is ${url}. Please click this url to reset your password.`)
+        // send the url in the mail to the user
+        try {
+            await mailer(email, "Reset Password Link by StudyNotion", `Your Link for email verification is ${url}. Please click this url to reset your password.`)
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json({
+                success: false,
+                message: "Error while sending reset password link",
+                error: err.message
+            })
+        }
 
         // return the response
         return res.status(200).json({
             success: true,
-            message: "Password Reset mail has been sent successfully"
-        });
+            message: "Link for reset password has been sent successfully"
+        })
 
     } catch (err) {
         console.log(err)
         return res.status(500).json({
             success: false,
-            message: "Something went wrong while creating reset password token",
+            message: "Something went wrong while creating the reset password link with token",
             error: err.message
         })
     }
 }
 
-// Reset Password
 exports.resetPassword = async (req, res) => {
     try {
-        // get data from request body
+        // get password, confirmPassword, token from request body
         const { password, confirmPassword, token } = req.body
 
         // validation of the data
         if (!password || !confirmPassword || !token) {
             return res.status(400).json({
                 success: false,
-                message: "Please fill the details properly"
+                message: "Please fill the data properly"
             })
         }
 
-        // check if password and confirm password matches or not
+        // check if password and confirmPassword matches or not
         if (password !== confirmPassword) {
             return res.status(400).json({
                 success: false,
-                message: "Password and confirm Password does not match"
+                message: "Password does not match, please try again"
             })
         }
 
-        // get user details using the token
+        // validation of the token
         const user = await User.findOne({ forgotPasswordToken: token })
-
-        // validation of token
         if (!user) {
             return res.status(400).json({
                 success: false,
@@ -98,20 +104,44 @@ exports.resetPassword = async (req, res) => {
             });
         }
 
-        // hash the new password
-        const hashedPassword = await bcrypt.hash(password, 10)
+        // hash the password
+        let hashedpassword
 
-        // update the user with the new password in db
+        try {
+            hashedpassword = await bcrypt.hash(password, 10)
+        } catch (err) {
+            console.log(err)
+            return res.status(500).json({
+                success: false,
+                message: `Failed to hash the password`,
+                error: err.message
+            });
+        }
+
+        // update the password in the db
         await User.findByIdAndUpdate(
-            {_id: user._id},
-            {password: hashedPassword},
-            {new: true}
+            { _id: user._id },
+            { password: hashedpassword },
+            { new: true }
         )
+
+        // send the mail regarding the change of password done
+        try {
+            await mailer(user.email, "Reset Password Done Successfully by Studynotion",
+                `Password has been changed successfully for the email <b>${user.email}</b>, Please visit the login page and try again`)
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json({
+                success: false,
+                message: "Error while sending the reset password confirmation",
+                error: err.message
+            })
+        }
 
         // return the response
         return res.status(200).json({
             success: true,
-            message: "Password updated successfully"
+            message: "Reset password is done successfully"
         })
 
     } catch (err) {

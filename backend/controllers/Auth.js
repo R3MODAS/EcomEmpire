@@ -11,10 +11,10 @@ const { updatedPassword } = require("../mail/updatedPassword")
 // Send OTP
 exports.sendOtp = async (req, res) => {
     try {
-        // get the email from request body
+        // get the email from the request body
         const { email } = req.body
 
-        // validation
+        // validation of the email
         if (!email) {
             return res.status(400).json({
                 success: false,
@@ -25,39 +25,37 @@ exports.sendOtp = async (req, res) => {
         // check if the user already exists in the db or not
         const user = await User.findOne({ email })
         if (user) {
-            return res.status(400).json({
+            return res.status(401).json({
                 success: false,
-                message: 'User is already registered, please visit the login page'
+                message: "User is already registered, please visit the login page"
             })
         }
 
         // generate an otp
-        let otp = otpGenerator.generate(6, {
+        let otp = otpGenerator.generate({
+            upperCaseAlphabets: false,
             lowerCaseAlphabets: false,
             specialChars: false,
-            upperCaseAlphabets: false
         })
 
         // check if the otp is unique or not
-        let result = await Otp.findOne({ otp: otp })
-
+        let result = await Otp.findOne({ otp })
         while (result) {
-            otp = otpGenerator.generate(6, {
+            otp = otpGenerator.generate({
+                upperCaseAlphabets: false,
                 lowerCaseAlphabets: false,
                 specialChars: false,
-                upperCaseAlphabets: false
             })
-            result = await Otp.findOne({ otp: otp })
+            result = await Otp.findOne({ otp })
         }
 
         // create an entry for otp in db
-        await Otp.create({ email: email, otp: otp })
+        await Otp.create({ otp, email })
 
         // return the response
         return res.status(200).json({
             success: true,
-            message: "Otp sent successfully",
-            otp
+            message: "Otp sent successfully"
         })
 
     } catch (err) {
@@ -73,37 +71,38 @@ exports.sendOtp = async (req, res) => {
 // Signup
 exports.signup = async (req, res) => {
     try {
-        // get data from request body
+        // get the data from request body
         const { firstName, lastName, email, password, confirmPassword, contactNumber, accountType, otp } = req.body
 
-        // validation
-        if (!firstName || !lastName || !email || !password || !confirmPassword || !contactNumber || !accountType || !otp) {
+        // validation of the data
+        if (!firstName || !lastName || !email || !password || !confirmPassword || !otp) {
             return res.status(400).json({
                 success: false,
-                message: "Please fill the details properly"
-            })
+                message: 'Please provide all the required fields'
+            });
         }
 
-        // check if the password and confirm password matches or not
+        // check if password and confirm password matches or not
         if (password !== confirmPassword) {
             return res.status(400).json({
                 success: false,
-                message: "Password and Confirm Password doesn't match"
-            })
+                message: 'Password do not match , please try again'
+            });
         }
 
         // check if the user already exists in the db or not
-        const user = await User.findOne({ email: email })
+        const user = await User.findOne({ email })
         if (user) {
             return res.status(400).json({
                 success: false,
-                message: "User is already registered, please visit the login page"
+                message: 'User is already registered, please visit the login page'
             })
         }
 
         // find the recent otp from the db
         const recentOtp = await Otp.find({ email }).sort({ createdAt: -1 }).limit(1)
 
+        // validate the otp
         if (recentOtp.length === 0 || otp !== recentOtp[0].otp) {
             return res.status(400).json({
                 success: false,
@@ -113,40 +112,43 @@ exports.signup = async (req, res) => {
 
         // hash the password
         let hashedpassword
-
         try {
             hashedpassword = await bcrypt.hash(password, 10)
-        } catch (err) {
+        }
+        catch (err) {
+            console.log(err)
             return res.status(500).json({
                 success: false,
-                message: "Failed to hash the password",
+                message: `Failed to hash the password`,
                 error: err.message
-            })
+            });
         }
 
-        // create an entry for profile model
+        // create an entry for profile in db
         const profileDetails = await Profile.create({
             about: null,
+            gender: null,
             contactNumber: null,
-            dateOfBirth: null,
-            gender: null
+            dateOfBirth: null
         })
 
-        // create an entry for user model
+        // create an entry for user in db
         const userDetails = await User.create({
             firstName,
             lastName,
             email,
             password: hashedpassword,
-            accountType,
             additionalDetails: profileDetails._id,
-            image: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`
+            accountType,
+            contactNumber,
+            image: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${firstName} ${lastName}`
         })
 
         // return the response
         return res.status(200).json({
             success: true,
-            message: "User has been signed up successfully"
+            message: "User registered successfully",
+            user: userDetails
         })
 
     } catch (err) {
@@ -162,36 +164,36 @@ exports.signup = async (req, res) => {
 // Login
 exports.login = async (req, res) => {
     try {
-        // get the email and password from request body
+        // get the email password from request body
         const { email, password } = req.body
 
-        // validation
+        // validation of the data
         if (!email || !password) {
             return res.status(400).json({
                 success: false,
-                message: "Email/Password is required"
+                message: "Email/Password is missing, please fill it properly"
             })
         }
 
-        // check if user already exists in the db or not
+        // check if the user exists in the db or not
         const user = await User.findOne({ email })
         if (!user) {
-            return res.status(400).json({
+            return res.status(401).json({
                 success: false,
-                message: "User not found, please visit the signup page"
+                message: "User is not registered yet, please visit the signup page"
             })
         }
 
-        // compare the password and db password
+        // compare the password user gave and the db password
         const comparePassword = await bcrypt.compare(password, user.password)
         if (!comparePassword) {
-            return res.status(400).json({
-                success: false,
-                message: "Password does not match"
+            return res.status(403).json({
+                message: "Please enter the correct password",
+                success: false
             })
         }
 
-        // create a payload for token
+        // create a payload for the jwt
         const payload = {
             id: user._id,
             email: user.email,
@@ -199,21 +201,22 @@ exports.login = async (req, res) => {
         }
 
         // create a token using jwt
-        const token = jwt.sign(payload, process.env.JWT_SECRET, {
+        const token = await jwt.sign(payload, process.env.JWT_SECRET, {
             expiresIn: "1h"
         })
 
         user.token = token
         user.password = undefined
 
-        // creating cookie and returning the response
+        // create options for cookie
         const options = {
-            expires: new Date(Date.now() + (3 * 24 * 60 * 60 * 1000)),
-            httpOnly: true
+            httpOnly: true,
+            expires: new Date(Date.now() + (3 * 24 * 60 * 60 * 1000))
         }
 
+        // send that token to user using cookie and return the response
         res.cookie("token", token, options).status(200).json({
-            success: true,
+            success: false,
             message: "User logged in successfully",
             token,
             user
@@ -232,57 +235,57 @@ exports.login = async (req, res) => {
 // Change Password
 exports.changePassword = async (req, res) => {
     try {
-        // get the data from request body
-        const { oldPassword, newPassword, confirmNewPassword } = req.body
-
-        // get the user Details using the req.user (from auth middleware)
+        // get the user details using the req.user (passed inside the auth middleware)
         const userDetails = await User.findById({ _id: req.user.id })
+
+        // get the oldPassword, newPassword and confirmNewPassword from request body
+        const { oldPassword, newPassword, confirmNewPassword } = req.body
 
         // validation of the data
         if (!oldPassword || !newPassword || !confirmNewPassword) {
             return res.status(400).json({
                 success: false,
-                message: "Please fill the details properly"
+                message: "Please fill the fields properly"
             })
         }
 
-        // check if new password and confirm new password matches or not
+        // check if oldPassword and db password matches or not
+        const comparePassword = await bcrypt.compare(oldPassword, userDetails.password)
+        if (!comparePassword) {
+            return res.status(403).json({
+                message: "Please enter the correct password",
+                success: false
+            })
+        }
+
+        // check if newPassword and confirmNewPassword matches or not
         if (newPassword !== confirmNewPassword) {
             return res.status(400).json({
                 success: false,
-                message: "New Password and Confirm New Password does not match"
-            })
+                message: "The password and confirm password does not match",
+            });
         }
 
-        // compare the old password and db password
-        const comparePassword = await bcrypt.compare(oldPassword, userDetails.password)
-
-        if (!comparePassword) {
-            return res.status(400).json({
-                success: false,
-                message: "Old Password does not match"
-            })
-        }
-
-        // update the db password with the newer one
+        // encrypt the new password and update it in the db
         const newEncryptedPassword = await bcrypt.hash(newPassword, 10)
         await User.findByIdAndUpdate(
-            { _id: userDetails._id },
-            { password: newEncryptedPassword },
-            { new: true }
+            {_id: userDetails._id},
+            {password: newEncryptedPassword},
+            {new: true}
         )
 
-        // send the mail to the user regarding the changing of password
-        try {
-            await mailer(
-                userDetails.email,
-                `Password update for ${userDetails.firstName} ${userDetails.lastName} by StudyNotion`,
-                updatedPassword(userDetails.email, `${userDetails.firstName} ${userDetails.lastName}`))
-        } catch (err) {
-            console.log(err)
-            return res.status(400).json({
-                success: false,
-                message: "Something went wrong while sending the mail to the user"
+        // send the mail regarding the update of password
+        try{
+            await mailer(userDetails.email, 
+                "Password Updated Successfully by StudyNotion",
+                updatedPassword(userDetails.email, `${userDetails.firstName} ${userDetails.lastName}`)
+            )
+        }catch(err){
+            console.log(err);
+            return res.status(500).json({
+              success:false,
+              message:"Error while sending updated password email",
+              error: err.message
             })
         }
 
