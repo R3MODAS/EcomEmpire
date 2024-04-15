@@ -1,98 +1,96 @@
-const jwt = require("jsonwebtoken")
-const User = require("../models/User")
+const jwt = require("jsonwebtoken");
 
-// auth
-exports.auth = async (req,res,next) => {
-    try{    
-        // get the token
-        const token = req.cookies.token
+// Auth middleware
+exports.auth = async (req, res, next) => {
+  try {
+    // get the token
+    const token =
+      req.cookies.token ||
+      req.body.token ||
+      req.header("Authorization").replace("Bearer ", "");
 
-        // validation of token
-        if(!token || token === undefined){
-            return res.status(401).json({
-                success: false,
-                message: "Invalid Token"
-            })
-        }
-
-        // get the payload from the token
-        try{
-            const decoded = jwt.verify(token, process.env.JWT_SECRET)
-            req.user = decoded
-        }
-        catch(err){
-            return req.status(500).json({
-                success: false,
-                message: "Failed to verify the token and decode the value"
-            })
-        }
-        next()
-    }catch(err){
-        console.log(err)
-        return res.status(500).json({
-            success: false,
-            message: "Error while Authenticating",
-            error: err.message
-        })
+    // validation of the token
+    if (!token || token === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Token is missing",
+      });
     }
-}
 
-// student
-exports.isStudent = async (req,res,next) => {
-    try{
-        if(req.user.accountType !== "Student"){
-            return res.status(401).json({
-                success: false,
-                message: "Failed to authorize as Student"
-            })
-        }
-        next()
-    }catch(err){
-        console.log(err)
-        return res.status(500).json({
-            success: false,
-            message: "Error while authenticating for student role",
-            error: err.message
-        })
+    // decode the payload
+    try {
+      const payload = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = payload;
+    } catch (err) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Token",
+      });
     }
-}
 
-// instructor
-exports.isInstructor = async (req,res,next) => {
-    try{
-        if(req.user.accountType !== "Instructor"){
-            return res.status(401).json({
-                success: false,
-                message: "Failed to authorize as Instructor"
-            })
-        }
-        next()
-    }catch(err){
-        console.log(err)
-        return res.status(500).json({
-            success: false,
-            message: "Error while authenticating for instructor role",
-            error: err.message
-        })
-    }
-}
+    next();
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to authorize the User",
+    });
+  }
+};
 
-// admin
-exports.isAdmin = async (req,res,next) => {
-    try{
-        if(req.user.accountType !== "Admin"){
-            return res.status(401).json({
-                success: false,
-                message: "Failed to authorize as Admin"
-            })
-        }
-        next()
-    }catch(err){
-        console.log(err)
-        return res.status(500).json({
-            success: false,
-            message: "Error while authenticating for admin role",
-            error: err.message
-        })
+// Instructor middleware
+exports.isInstructor = async (req, res, next) => {
+  try {
+    if (req.user.accountType !== "Instructor") {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to authorize as a Instructor",
+      });
     }
-}
+    next();
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error while authorizing as a Instructor",
+    });
+  }
+};
+
+// Student middleware
+exports.isStudent = async (req, res, next) => {
+  try {
+    if (req.user.accountType !== "Student") {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to authorize as a Student",
+      });
+    }
+    next();
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error while authorizing as a Student",
+    });
+  }
+};
+
+// Admin middleware
+exports.isAdmin = async (req, res, next) => {
+  try {
+    if (req.user.accountType !== "Admin") {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to authorize as a Admin",
+      });
+    }
+    next();
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error while authorizing as a Admin",
+    });
+  }
+};

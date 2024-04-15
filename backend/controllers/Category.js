@@ -1,29 +1,30 @@
-const Category = require("../models/Category")
+const Category = require("../models/Category");
 
 // create category
-exports.createCategory = async (req, res) => {
-    try {
-        // get the category name and desc from request body (user)
-        const { name, description } = req.body
+exports.createCategory = async (req,res) => {
+    try{
+        // get the data from request body
+        const {name, description} = req.body
 
         // validation of the data
-        if (!name || !description) {
+        if(!name || !description){
             return res.status(400).json({
                 success: false,
-                message: "Please fill the name/description properly"
+                message: "Please fill the details properly"
             })
         }
 
         // create an entry for category in db
-        await Category.create({ name: name, description })
+        await Category.create({name: name, description: description})
 
         // return the response
         return res.status(200).json({
             success: true,
-            message: "Category has been created successfully"
+            message: "Category is created successfully"
         })
-    } catch (err) {
-        console.log(err)
+
+    }catch(err){
+        console.log(err.message);
         return res.status(500).json({
             success: false,
             message: "Something went wrong while creating the category",
@@ -33,23 +34,22 @@ exports.createCategory = async (req, res) => {
 }
 
 // get all categories
-exports.getAllCategories = async (req, res) => {
-    try {
+exports.getAllCategories = async (req,res) => {
+    try{
         // get all the categories
-        const allCategories = await Category.find({}, { name: true, courses: true })
+        const categories = await Category.find({}, {name: true, description: true})
 
         // return the response
         return res.status(200).json({
             success: true,
-            message: "All Categories has been fetched successfully",
-            data: allCategories
-        });
-
-    } catch (err) {
-        console.log(err)
+            message: "Got all the categories successfully",
+            data: categories
+        })
+    }catch(err){
+        console.log(err.message);
         return res.status(500).json({
             success: false,
-            message: "Something went wrong while fetching all the categories",
+            message: "Something went wrong while getting the category",
             error: err.message
         })
     }

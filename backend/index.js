@@ -1,14 +1,13 @@
 const app = require("./app");
-const connectDB = require("./db/index")
-const cloudinary = require("./utils/cloudinary")
+const { connectDB } = require("./db/index");
+const { cloudinaryConnect } = require("./utils/cloudinary");
+process.loadEnvFile();
 
-process.loadEnvFile()
+const PORT = process.env.PORT || 5000;
 
-const PORT = process.env.PORT || 5000
-
-connectDB()
-cloudinary.cloudinaryConnect()
+connectDB();
+cloudinaryConnect();
 
 app.listen(PORT, () => {
-    console.log(`Server started at http://localhost:${PORT}`)
-})
+  console.log(`Server started at http://localhost:${PORT}`);
+});
