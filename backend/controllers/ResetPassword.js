@@ -1,12 +1,14 @@
 const User = require("../models/User");
-const mailer = require("../utils/mailer");
-const crypto = require("crypto");
-const bcrypt = require("bcrypt");
+const { mailer } = require("../utils/mailer");
 
-// Reset Password Token controller
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+
+// Reset Password Token
 exports.resetPasswordToken = async (req, res) => {
   try {
-    // get the email from request body
+    // get the data from request body
     const { email } = req.body;
 
     // validation of the data
@@ -18,7 +20,7 @@ exports.resetPasswordToken = async (req, res) => {
     }
 
     // check if the user exists in the db or not
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -26,10 +28,10 @@ exports.resetPasswordToken = async (req, res) => {
       });
     }
 
-    // generate a token
+    // generate an token
     const token = crypto.randomUUID();
 
-    // update the token and token expiry for user model in db
+    // update the token and token expiry for user in db
     await User.findByIdAndUpdate(
       { _id: user._id },
       {
@@ -39,20 +41,20 @@ exports.resetPasswordToken = async (req, res) => {
       { new: true }
     );
 
-    // create an url for the user to reset password
-    const url = `http://localhost:${process.env.PORT}/update-password/${token}`;
+    // create an url for user
+    const url = `http://localhost:${process.env.PORT}/reset-password/${token}`;
 
     // send a mail to the user with the url
     await mailer(
       email,
-      "Reset Password by StudyNotion",
+      "Password Reset Done Successfully | StudyNotion",
       `Your Link for email verification is ${url}. Please click this url to reset your password.`
     );
 
     // return the response
     return res.status(200).json({
       success: true,
-      message: "Reset Password Link sent successfully",
+      message: "Reset Password Link is sent successfully",
     });
   } catch (err) {
     console.log(err.message);
@@ -64,25 +66,25 @@ exports.resetPasswordToken = async (req, res) => {
   }
 };
 
-// Reset Password controller
+// Reset Password
 exports.resetPassword = async (req, res) => {
   try {
     // get the data from request body
     const { password, confirmPassword, token } = req.body;
 
     // validation of the data
-    if (!password || !confirmPassword || !token) {
+    if (!password || !confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "Please fill the data properly",
+        message: "Please fill all the data properly",
       });
     }
 
-    // check if the password and confirm password matches or not
+    // check if password and confirm password matches or not
     if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "Password does not match",
+        message: "Password and Confirm password doesn't match",
       });
     }
 
@@ -99,7 +101,7 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    // encrypt the new password and update it to the db
+    // encrypt the new password and update it in the db
     const newEncryptedPassword = await bcrypt.hash(password, 10);
     await User.findByIdAndUpdate(
       { _id: user._id },
@@ -107,10 +109,10 @@ exports.resetPassword = async (req, res) => {
       { new: true }
     );
 
-    // send the mail regarding the password updation
+    // send a mail to the user after updating the password
     await mailer(
       user.email,
-      "Reset Password Done Successfully by Studynotion",
+      "Reset Password Done Successfully | StudyNotion",
       `Password has been changed successfully for the email <b>${user.email}</b>`
     );
 
@@ -123,7 +125,7 @@ exports.resetPassword = async (req, res) => {
     console.log(err.message);
     return res.status(500).json({
       success: false,
-      message: "Something went wrong while resetting the password",
+      message: "Something went wrong while updating the password",
       error: err.message,
     });
   }

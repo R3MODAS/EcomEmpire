@@ -3,19 +3,20 @@ const mongoose = require("mongoose")
 const categorySchema = new mongoose.Schema({
     name: {
         type: String,
+        trim: true,
         required: true,
-        trim: true
+        unique: true
     },
     description: {
         type: String,
-        trim: true
+        trim: true,
+        required: true,
+        unique: true
     },
-    courses: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Course"
-        }
-    ]
+    courses: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course"
+    }]
 })
 
 const Category = mongoose.model("Category", categorySchema)

@@ -1,27 +1,33 @@
+const Category = require("../models/Category");
 const Course = require("../models/Course");
 const User = require("../models/User");
-const Category = require("../models/Category");
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
 
+// Create a Course
 exports.createCourse = async (req, res) => {
   try {
-    // get the user id (for verification of instructor)
-    const userId = req.user.id;
-
-    // get the data from request body (category -> categoryId)
-    const { courseName, courseDescription, whatYouWillLearn, price, category } =
+    // get the data from request body
+    const { courseName, courseDescription, price, whatYouWillLearn, category } =
       req.body;
 
-    // get the thumbnail img
+    // get the thumbnail image from request files
     const thumbnail = req.files.thumbnailImage;
 
     // validation of the data
-    if (!courseName || !courseDescription || !whatYouWillLearn || !price) {
+    if (
+      !courseName ||
+      !courseDescription ||
+      !whatYouWillLearn ||
+      !price ||
+      !category
+    ) {
       return res.status(400).json({
-        success: false,
-        message: "Please fill the details properly",
+        error: "Please fill all the data properly",
       });
     }
+
+    // get the user id from req.user (passed by auth middleware)
+    const userId = req.user.id;
 
     // check if the user is instructor or not
     const instructorDetails = await User.findById(
@@ -31,7 +37,7 @@ exports.createCourse = async (req, res) => {
     if (!instructorDetails) {
       return res.status(400).json({
         success: false,
-        message: "No such instructor exists",
+        message: "Instructor is not found",
       });
     }
 
@@ -40,7 +46,7 @@ exports.createCourse = async (req, res) => {
     if (!categoryDetails) {
       return res.status(400).json({
         success: false,
-        message: "No such category exists",
+        message: "Category does not exists",
       });
     }
 
@@ -54,23 +60,23 @@ exports.createCourse = async (req, res) => {
     const newCourse = await Course.create({
       courseName,
       courseDescription,
-      category: categoryDetails._id,
-      instructor: instructorDetails._id,
       price,
       whatYouWillLearn,
+      category: categoryDetails._id,
+      instructor: instructorDetails._id,
       thumbnail: thumbnailImage.secure_url,
     });
 
-    // update the course entry for user in db
+    // update the course in user model (belongs to which instructor)
     await User.findByIdAndUpdate(
       { _id: instructorDetails._id },
       { $push: { courses: newCourse._id } },
       { new: true }
     );
 
-    // update the course entry for category in db
+    // update the course in category model (belongs to which category)
     await Category.findByIdAndUpdate(
-      { _id: category },
+      { _id: categoryDetails._id },
       { $push: { courses: newCourse._id } },
       { new: true }
     );
@@ -79,12 +85,36 @@ exports.createCourse = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Course is created successfully",
+      course: newCourse,
     });
   } catch (err) {
     console.log(err.message);
     return res.status(500).json({
       success: false,
-      message: "Something went wrong while creating the course",
+      message: "Something went wrong while creating a course",
+      error: err.message,
+    });
+  }
+};
+
+// Get all Courses
+exports.getAllCourses = async (req, res) => {
+  try {
+    // get all the courses with course name, price, thumbnail, instructor
+    const allCourses = await Course.find({}, {courseName: true, price: true, thumbnail: true, instructor: true}).populate("instructor").exec()
+
+    // return the response
+    return res.status(200).json({
+        success: true,
+        message: "Got all the courses successfully",
+        courses: allCourses
+    })
+
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching all the courses",
       error: err.message,
     });
   }
