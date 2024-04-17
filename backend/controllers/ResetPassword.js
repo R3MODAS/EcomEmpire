@@ -1,9 +1,9 @@
 const User = require("../models/User");
 const { mailer } = require("../utils/mailer");
+const { updatePassword } = require("../mail/updatePassword");
 
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 
 // Reset Password Token
 exports.resetPasswordToken = async (req, res) => {
@@ -18,7 +18,6 @@ exports.resetPasswordToken = async (req, res) => {
         message: "Email is required",
       });
     }
-
     // check if the user exists in the db or not
     const user = await User.findOne({ email });
     if (!user) {
@@ -28,27 +27,29 @@ exports.resetPasswordToken = async (req, res) => {
       });
     }
 
-    // generate an token
+    // generate a token
     const token = crypto.randomUUID();
 
     // update the token and token expiry for user in db
-    await User.findByIdAndUpdate(
-      { _id: user._id },
+    await User.findOneAndUpdate(
+      { email },
       {
-        forgotPasswordToken: token,
-        forgotPasswordTokenExpiry: Date.now() + 5 * 60 * 1000,
+        $set: {
+          forgotPasswordToken: token,
+          forgotPasswordTokenExpiry: Date.now() + 5 * 60 * 1000,
+        },
       },
       { new: true }
     );
 
-    // create an url for user
+    // create a url for user (client)
     const url = `http://localhost:${process.env.PORT}/reset-password/${token}`;
 
     // send a mail to the user with the url
     await mailer(
       email,
-      "Password Reset Done Successfully | StudyNotion",
-      `Your Link for email verification is ${url}. Please click this url to reset your password.`
+      "Reset Password Link | StudyNotion",
+      `Your Link for Password Reset is ${url}. Please click this url to reset your password.`
     );
 
     // return the response
@@ -67,16 +68,16 @@ exports.resetPasswordToken = async (req, res) => {
 };
 
 // Reset Password
-exports.resetPassword = async (req, res) => {
+exports.resetPasswordToken = async (req, res) => {
   try {
     // get the data from request body
     const { password, confirmPassword, token } = req.body;
 
     // validation of the data
-    if (!password || !confirmPassword) {
+    if (!password || !confirmPassword || !token) {
       return res.status(400).json({
         success: false,
-        message: "Please fill all the data properly",
+        message: "All fields are required",
       });
     }
 
@@ -84,7 +85,7 @@ exports.resetPassword = async (req, res) => {
     if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "Password and Confirm password doesn't match",
+        message: "Password does not match",
       });
     }
 
@@ -101,31 +102,31 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    // encrypt the new password and update it in the db
-    const newEncryptedPassword = await bcrypt.hash(password, 10);
+    // encrypt the new password and update the password for the user in db
+    const newEncryptedPass = await bcrypt.hash(password, 10);
     await User.findByIdAndUpdate(
       { _id: user._id },
-      { password: newEncryptedPassword },
+      { password: newEncryptedPass },
       { new: true }
     );
 
-    // send a mail to the user after updating the password
+    // send a mail to the user regarding the password reset confirmation
     await mailer(
       user.email,
       "Reset Password Done Successfully | StudyNotion",
-      `Password has been changed successfully for the email <b>${user.email}</b>`
+      updatePassword(user.email, `${user.firstName} ${user.lastName}`)
     );
 
     // return the response
     return res.status(200).json({
       success: true,
-      message: "Reset password is done successfully",
+      message: "Reset Password is done successfully",
     });
   } catch (err) {
     console.log(err.message);
     return res.status(500).json({
       success: false,
-      message: "Something went wrong while updating the password",
+      message: "Something went wrong while sending the reset password link",
       error: err.message,
     });
   }

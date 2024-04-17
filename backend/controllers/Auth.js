@@ -1,17 +1,17 @@
 const User = require("../models/User");
 const Otp = require("../models/Otp");
 const Profile = require("../models/Profile");
-const { mailer } = require("../utils/mailer");
-const { updatePassword } = require("../mail/updatePassword");
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
+const { mailer } = require("../utils/mailer");
+const { changePassword } = require("../mail/changePassword");
 
-// Send Otp
+// Send OTP
 exports.sendOtp = async (req, res) => {
   try {
-    // get the data from request body
+    // get data from request body
     const { email } = req.body;
 
     // validation of the data
@@ -38,10 +38,10 @@ exports.sendOtp = async (req, res) => {
       upperCaseAlphabets: false,
     });
 
-    // check if the otp is unique or not
+    // validation of the otp
     let result = await Otp.findOne({ otp });
     while (result) {
-      otpGenerator.generate(6, {
+      otp = otpGenerator.generate(6, {
         lowerCaseAlphabets: false,
         specialChars: false,
         upperCaseAlphabets: false,
@@ -50,12 +50,12 @@ exports.sendOtp = async (req, res) => {
     }
 
     // create an entry for otp in db
-    await Otp.create({ otp, email });
+    await Otp.create({ email, otp });
 
     // return the response
     return res.status(200).json({
       success: true,
-      message: "OTP sent successfully",
+      message: "Otp sent successfully",
     });
   } catch (err) {
     console.log(err.message);
@@ -70,7 +70,7 @@ exports.sendOtp = async (req, res) => {
 // Signup
 exports.signup = async (req, res) => {
   try {
-    // get the data from request body
+    // get data from request body
     const {
       firstName,
       lastName,
@@ -89,13 +89,13 @@ exports.signup = async (req, res) => {
       !email ||
       !password ||
       !confirmPassword ||
-      !accountType ||
       !contactNumber ||
+      !accountType ||
       !otp
     ) {
       return res.status(400).json({
         success: false,
-        message: "Please fill all the data properly",
+        message: "All fields are required",
       });
     }
 
@@ -103,7 +103,7 @@ exports.signup = async (req, res) => {
     if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "Password and Confirm password doesn't match",
+        message: "Password does not match",
       });
     }
 
@@ -125,7 +125,7 @@ exports.signup = async (req, res) => {
     if (recentOtp.length === 0 || otp !== recentOtp[0].otp) {
       return res.status(400).json({
         success: false,
-        message: "Invalid Otp",
+        message: "Invalid OTP",
       });
     }
 
@@ -145,10 +145,9 @@ exports.signup = async (req, res) => {
       firstName,
       lastName,
       email,
-      password: hashedPassword,
       accountType,
+      password: hashedPassword,
       additionalDetails: profileDetails._id,
-      contactNumber,
       image: `https://api.dicebear.com/5.x/initials/svg?seed=${user.firstName} ${user.lastName}`,
     });
 
@@ -171,14 +170,14 @@ exports.signup = async (req, res) => {
 // Login
 exports.login = async (req, res) => {
   try {
-    // get the data from request body
+    // get data from request body
     const { email, password } = req.body;
 
     // validation of the data
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Please fill all the data properly",
+        message: "All fields are required",
       });
     }
 
@@ -196,7 +195,7 @@ exports.login = async (req, res) => {
     if (!comparePassword) {
       return res.status(400).json({
         success: false,
-        message: "Incorrect Password",
+        message: "Incorrect password",
       });
     }
 
@@ -207,7 +206,7 @@ exports.login = async (req, res) => {
       accountType: user.accountType,
     };
 
-    // create a jwt token
+    // create a jwt
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "2h",
     });
@@ -221,7 +220,7 @@ exports.login = async (req, res) => {
     // create a cookie and return the response
     res.cookie("token", token, options).status(200).json({
       success: true,
-      message: "Login successful",
+      message: "Login done successfully",
       token,
       user,
     });
@@ -229,7 +228,7 @@ exports.login = async (req, res) => {
     console.log(err.message);
     return res.status(500).json({
       success: false,
-      message: "Something went wrong while the user tries to login",
+      message: "Something went wrong while the user login",
       error: err.message,
     });
   }
@@ -238,62 +237,62 @@ exports.login = async (req, res) => {
 // Change Password
 exports.changePassword = async (req, res) => {
   try {
-    // get the data from request body
+    // get data from request body
     const { oldPassword, newPassword, confirmNewPassword } = req.body;
 
     // validation of the data
     if (!oldPassword || !newPassword || !confirmNewPassword) {
       return res.status(400).json({
         success: false,
-        message: "Please fill all the data properly",
+        message: "All fields are required",
       });
     }
 
-    // get the user details from req.user (passed by auth middleware)
+    // get the user details using req.user (passed using auth middleware)
     const user = await User.findById({ _id: req.user.id });
 
-    // compare the old password and db password
+    // check if old password and db password matches or not
     const comparePassword = await bcrypt.compare(oldPassword, user.password);
     if (!comparePassword) {
       return res.status(400).json({
         success: false,
-        message: "Incorrect Password",
+        message: "Incorrect password",
       });
     }
 
-    // check if the new password and confirm new password matches or not
+    // check if new password and confirm new password matches or not
     if (newPassword !== confirmNewPassword) {
       return res.status(400).json({
         success: false,
-        message: "New Password and Confirm New Password doesn't match",
+        message: "New password and confirm new password doesn't match",
       });
     }
 
-    // encrypt the new password and update it to the db
-    const newEncryptedPassword = await bcrypt.hash(newPassword, 10);
+    // encrypt the new password and update the new password in the db
+    const newEncryptedPass = await bcrypt.hash(newPassword, 10);
     await User.findByIdAndUpdate(
       { _id: user._id },
-      { password: newEncryptedPassword },
+      { password: newEncryptedPass },
       { new: true }
     );
 
-    // send the mail to the user
+    // send a mail regarding the updation of password
     await mailer(
       user.email,
-      "Password Updated Successfully | StudyNotion",
-      updatePassword(user.email, `${user.firstName} ${user.lastName}`)
+      "Password Changed Successfully | StudyNotion",
+      changePassword(user.email, `${user.firstName} ${user.lastName}`)
     );
 
     // return the response
     return res.status(200).json({
       success: true,
-      message: "Password has been updated successfully",
+      message: "Password changed successfully",
     });
   } catch (err) {
     console.log(err.message);
     return res.status(500).json({
       success: false,
-      message: "Something went wrong while updating the password",
+      message: "Something went wrong while changing the password",
       error: err.message,
     });
   }
