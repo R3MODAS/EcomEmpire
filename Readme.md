@@ -8,4 +8,6 @@
 
 - Category model is created along with Create Category and Get all Categories controller (Only Admin can create category) as without category, we cannot create Course
 
-- Section model is created along with Create Section, Update Section and Delete Section and SubSection model is created
+- Section model is created along with Create, Update and Delete controllers
+
+- SubSection model is created along with Create, Update and Delete controllers
