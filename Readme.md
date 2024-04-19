@@ -11,3 +11,6 @@
 - Section model is created along with Create, Update and Delete controllers
 
 - SubSection model is created along with Create, Update and Delete controllers
+
+- Learn more about Cron Job [A cron job is a Linux command that schedules tasks to be executed in the future]
+
