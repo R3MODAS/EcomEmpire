@@ -1,10 +1,10 @@
-exports.changePassword = (email, name) => {
-	return `<!DOCTYPE html>
+exports.resetPassword = (email, name) => {
+    return `<!DOCTYPE html>
     <html>
     
     <head>
         <meta charset="UTF-8">
-        <title>Password Change Confirmation</title>
+        <title>Password Update Confirmation</title>
         <style>
             body {
                 background-color: #ffffff;
@@ -57,10 +57,10 @@ exports.changePassword = (email, name) => {
         <div class="container">
             <a href="https://studynotion-edtech-project.vercel.app"><img class="logo"
                     src="https://i.ibb.co/7Xyj3PC/logo.png" alt="StudyNotion Logo"></a>
-            <div class="message">Password Change Confirmation</div>
+            <div class="message">Password Update Confirmation</div>
             <div class="body">
                 <p>Hey ${name},</p>
-                <p>Your password has been successfully changed for the email <span class="highlight">${email}</span>.
+                <p>Your password has been successfully updated for the email <span class="highlight">${email}</span>.
                 </p>
                 <p>If you did not request this password change, please contact us immediately to secure your account.</p>
             </div>

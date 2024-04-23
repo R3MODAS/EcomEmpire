@@ -1,27 +1,29 @@
-const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken")
 
 // Auth
 exports.auth = async (req,res,next) => {
     try{
         // get the token
-        const token = req.body.token || req.cookies.token || req.header("Authorization").replace("Bearer ", "")
+        const token = req.cookies.token
 
         // validation of the token
-        if(!token || token === undefined){
+        if(!token){
             return res.status(400).json({
                 success: false,
-                message: "Invalid Token"
+                message: "Token is required"
             })
         }
 
-        // decode the token for payload
         try{
+            // decode the payload
             const decoded = jwt.verify(token, process.env.JWT_SECRET)
+
+            // send the value to req.user
             req.user = decoded
         }catch(err){
-            return res.status(500).json({
+            return res.status(400).json({
                 success: false,
-                message: "Something went wrong while decoding the value"
+                message: "Failed to decode the payload"
             })
         }
         next()
@@ -29,66 +31,64 @@ exports.auth = async (req,res,next) => {
         console.log(err.message);
         return res.status(500).json({
             success: false,
-            message: "Something went wrong while authorizing the user"
+            message: "Something went wrong while authorizing the user",
+            error: err.message
         })
     }
 }
 
 // Student
-exports.isStudent = async(req,res,next) => {
+exports.isStudent = async (req,res,next) => {
     try{
         if(req.user.accountType !== "Student"){
             return res.status(400).json({
                 success: false,
-                message: "Failed to authorize as Student"
+                message: "Failed to Authorize as Student"
             })
         }
-        next()
     }catch(err){
         console.log(err.message);
         return res.status(500).json({
             success: false,
-            message: "Something went wrong while authorizing as Student",
+            message: "Something went wrong while authorizing as a student",
             error: err.message
         })
     }
 }
 
 // Admin
-exports.isAdmin = async(req,res,next) => {
+exports.isAdmin = async (req,res,next) => {
     try{
         if(req.user.accountType !== "Admin"){
             return res.status(400).json({
                 success: false,
-                message: "Failed to authorize as Admin"
+                message: "Failed to Authorize as Admin"
             })
         }
-        next()
     }catch(err){
         console.log(err.message);
         return res.status(500).json({
             success: false,
-            message: "Something went wrong while authorizing as Admin",
+            message: "Something went wrong while authorizing as admin",
             error: err.message
         })
     }
 }
 
 // Instructor
-exports.isInstructor = async(req,res,next) => {
+exports.isInstructor = async (req,res,next) => {
     try{
         if(req.user.accountType !== "Instructor"){
             return res.status(400).json({
                 success: false,
-                message: "Failed to authorize as Instructor"
+                message: "Failed to Authorize as Instructor"
             })
         }
-        next()
     }catch(err){
         console.log(err.message);
         return res.status(500).json({
             success: false,
-            message: "Something went wrong while authorizing as Instructor",
+            message: "Something went wrong while authorizing as instructor",
             error: err.message
         })
     }

@@ -1,5 +1,5 @@
 exports.verifyEmail = (otp) => {
-  return `<!DOCTYPE html>
+	return `<!DOCTYPE html>
 	<html>
 	
 	<head>
