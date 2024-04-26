@@ -56,3 +56,5 @@ exports.showAllCategories = async (req,res) => {
         })
     }
 }
+
+// Get Category Page Details
