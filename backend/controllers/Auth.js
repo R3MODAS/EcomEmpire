@@ -55,7 +55,8 @@ exports.sendOtp = async (req, res) => {
         // return the response
         return res.status(200).json({
             success: true,
-            message: "Otp sent successfully"
+            message: "Otp sent successfully",
+            otp
         })
 
     } catch (err) {
@@ -128,6 +129,7 @@ exports.Signup = async (req, res) => {
             email,
             password: hashedPassword,
             accountType,
+            approved: true,
             additionalDetails: profileDetails._id,
             image: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`
         })

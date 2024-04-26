@@ -45,8 +45,17 @@ const userSchema = new mongoose.Schema({
         ref: "Profile"
     },
     forgotPasswordToken: String,
-    forgotPasswordTokenExpiry: Date
-})
+    forgotPasswordTokenExpiry: Date,
+    active: {
+        type: Boolean,
+        default: true
+    },
+    approved: {
+        type: Boolean,
+        default: true
+    },
+
+}, {timestamps: true})
 
 const User = mongoose.model("User", userSchema)
 module.exports = User
