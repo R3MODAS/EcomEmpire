@@ -1,27 +1,30 @@
-const {instance} = require("../utils/razorpay")
 const Course = require("../models/Course")
 const User = require("../models/User")
-const {mailer} = require("../utils/mailer")
-const {courseEnrollment} = require("../mail/courseEnrollment")
+
+const { instance } = require("../utils/razorpay");
+const { mailer } = require("../utils/mailer")
+
 const mongoose = require("mongoose")
 const crypto = require("crypto")
 
-// Capture the Payment and Initiate the Razorpay order
+// Capture Payment (Create an Order)
 exports.capturePayment = async (req,res) => {
     try {
-        // get courseId and userId (from auth middleware) from request body
+        // get courseId from request body
         const {courseId} = req.body
+
+        // get user id from req.user (from auth middleware)
         const userId = req.user.id
 
-        // validation of the data
+        // validation of course id
         if(!courseId){
             return res.status(400).json({
                 success: false,
-                message: "Please provide the Course"
+                message: "Course id is required"
             })
         }
 
-        // check if the course is valid or not
+        // check if the course exists in the db or not
         const course = await Course.findById({_id: courseId})
         if(!course){
             return res.status(400).json({
@@ -33,105 +36,85 @@ exports.capturePayment = async (req,res) => {
         // check if the user already bought the course or not
         const convertedUserId = new mongoose.Types.ObjectId(userId)
         if(course.studentsEnrolled.includes(convertedUserId)){
-           return res.status(400).json({
-            success: false,
-            message: "Student is already enrolled to this course"
-           }) 
+            return res.status(400).json({
+                success: false,
+                message: "Student is already enrolled to the course"
+            })
         }
 
-        // create an order
+        // create the order
         const amount = course.price
         const currency = "INR"
-
-        var options = {
+        
+        const options = {
             amount: amount * 100,
             currency: currency,
-            receipt: Math.random(Date.now()).toString(),
-            notes: {
-                courseId: courseId,
-                userId
-            }
-        };
+            receipt: Math.random(Date.now().toString())
+        }
 
-        // initiate the payment using razorpay
-        const paymentResponse = instance.orders.create(options)
-        console.log(paymentResponse);
+        const paymentDetails = instance.orders.create(options)
+        console.log(paymentDetails);
 
         // return the response
         return res.status(200).json({
             success: true,
-            paymentResponse
+            message: "Order is created successfully",
+            paymentDetails
         })
 
     } catch (err) {
         console.log(err.message);
         return res.status(500).json({
             success: false,
-            message: "Something went wrong while capturing the payment"
+            message: "Something went wrong while capturing the payment",
+            error: err.message
         })
     }
 }
 
-// Verify Signature
+// Verify Signature (Verify the Payment)
 exports.verifySignature = async (req,res) => {
-    try{
-        // get the secret key from server and client (webhook)
-        const webhookSecret = "123456"
-        const signature = req.headers("x-razorpay-signature")
+    try {
+        // get data from request body
+        const {razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId} = req.body
 
-        // Encrypt the secret key
-        const shasum = crypto.createHmac("sha256", webhookSecret)
-        shasum.update(JSON.stringify(req.body))
-        const digest = shasum.digest("hex")
+        // get user id from req.user (from auth middleware)
+        const userId = req.user.id
 
-        // compare the signature (client) and secret key from server
-        if(signature === digest){
-            console.log("Payment is authorized");
-
-            const {courseId, userId} = req.body.payload.payment.entity.notes
-
-            // fulfill the action
-            const enrolledCourse = await Course.findOneAndUpdate(
-                {_id: courseId},
-                {
-                    $push: {studentsEnrolled: userId}
-                },
-                {new: true}
-            )
-            console.log(enrolledCourse)
-
-            if(!enrolledCourse){
-                return res.status(400).json({
-                    success: false,
-                    message: "Course is not found"
-                })
-            }
-
-            // find the student and add the course 
-            const enrolledStudent = await User.findOneAndUpdate(
-                {_id: userId},
-                {
-                    $push: {courses: courseId}
-                },
-                {new: true}
-            )
-            console.log(enrolledStudent);
+        // validation of the data
+        if(!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !courseId){
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required"
+            })
         }
 
-        // send mail
-        await mailer(enrolledStudent.email, "Payment Success", "Congratulations, you are onboarded into new Course")
+        // create the signature
+        const body = razorpay_order_id + "|" + razorpay_payment_id
+        const expectedSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_SECRET)
+        .update(body.toString())
+        .digest("hex")
+        
+        // verify the signature
+        if(expectedSignature === razorpay_signature){
+            return res.status(200).json({
+                success: true,
+                message: "Payment is verified"
+            })
+        }
+        else{
+            return res.status(400).json({
+                success: false,
+                message: "Failed to verify the payment"
+            })
+        }
 
-        // return the response
-        return res.status(200).json({
-            success: true,
-            message: "Signature verified and Course added"
-        })
-
-    }catch(err){
+    } catch (err) {
         console.log(err.message);
         return res.status(500).json({
             success: false,
-            message: "Something went wrong while verifying signature",
+            message: "Something went wrong while verifying the signature",
             error: err.message
         })
     }

@@ -3,14 +3,15 @@ const mongoose = require("mongoose")
 const categorySchema = new mongoose.Schema({
     name: {
         type: String,
-        trim: true,
         required: true,
-        unique: true
+        unique: true,
+        trim: true
     },
     description: {
         type: String,
-        trim: true,
-        unique: true
+        required: true,
+        unique: true,
+        trim: true
     },
     courses: [{
         type: mongoose.Schema.Types.ObjectId,

@@ -3,28 +3,37 @@ const mongoose = require("mongoose")
 const userSchema = new mongoose.Schema({
     firstName: {
         type: String,
-        trim: true,
-        required: true
+        required: true,
+        trim: true
     },
     lastName: {
         type: String,
-        trim: true,
-        required: true
+        required: true,
+        trim: true
     },
     email: {
         type: String,
-        trim: true,
         required: true,
-        unique: true
+        unique: true,
+        trim: true
     },
     password: {
         type: String,
-        trim: true,
-        required: true
+        required: true,
+        trim: true
     },
     accountType: {
         type: String,
         enum: ["Admin", "Instructor", "Student"],
+        required: true
+    },
+    image: {
+        type: String,
+        required: true
+    },
+    additionalDetails: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Profile",
         required: true
     },
     courses: [{
@@ -35,26 +44,8 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "CourseProgress"
     }],
-    image: {
-        type: String,
-        required: true,
-        trim: true
-    },
-    additionalDetails: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Profile"
-    },
     forgotPasswordToken: String,
-    forgotPasswordTokenExpiry: Date,
-    active: {
-        type: Boolean,
-        default: true
-    },
-    approved: {
-        type: Boolean,
-        default: true
-    },
-
+    forgotPasswordTokenExpiry: Date
 }, {timestamps: true})
 
 const User = mongoose.model("User", userSchema)
