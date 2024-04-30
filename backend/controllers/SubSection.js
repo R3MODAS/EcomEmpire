@@ -54,7 +54,8 @@ exports.createSubSection = async (req, res) => {
         // return the response
         return res.status(200).json({
             success: true,
-            message: "Subsection is created successfully"
+            message: "Subsection is created successfully",
+            updatedSection
         })
 
     } catch (err) {
@@ -71,10 +72,10 @@ exports.createSubSection = async (req, res) => {
 exports.updateSubSection = async (req, res) => {
     try {
         // get data from request body
-        const { title, description, subSectionId, sectionId } = req.body
+        const { title, description, subsectionId, sectionId } = req.body
 
         // check if the subsection exists in the db or not
-        const subSection = await SubSection.findById({ _id: subSectionId })
+        const subSection = await SubSection.findById({ _id: subsectionId })
         if (!subSection) {
             return res.status(400).json({
                 success: false,
@@ -126,10 +127,10 @@ exports.updateSubSection = async (req, res) => {
 exports.deleteSubSection = async (req, res) => {
     try {
         // get data from request body
-        const { subSectionId, sectionId } = req.body
+        const { subsectionId, sectionId } = req.body
 
         // validation of the data
-        if (!subSectionId || !sectionId) {
+        if (!subsectionId || !sectionId) {
             return res.status(400).json({
                 success: false,
                 message: "All fields are required"
@@ -137,7 +138,7 @@ exports.deleteSubSection = async (req, res) => {
         }
 
         // check if the subsection exists in the db or not
-        const subSection = await SubSection.findById({ _id: subSectionId })
+        const subSection = await SubSection.findById({ _id: subsectionId })
         if (!subSection) {
             return res.status(400).json({
                 success: false,
@@ -145,17 +146,17 @@ exports.deleteSubSection = async (req, res) => {
             })
         }
 
-        // delete the subsection
-        await SubSection.findByIdAndDelete({ _id: subSectionId })
-
         // delete the subsection from section
         await Section.findByIdAndUpdate(
             { _id: sectionId },
             {
-                $pull: { subSection: subSectionId }
+                $pull: { subSection: subsectionId }
             },
             { new: true }
         )
+
+        // delete the subsection
+        await SubSection.findByIdAndDelete({ _id: subsectionId })
 
         // show the updated section
         const updatedSection = await Section.findById({ _id: sectionId }).populate("subSection").exec()

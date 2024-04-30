@@ -2,13 +2,13 @@ const RatingAndReview = require("../models/RatingAndReview")
 const Course = require("../models/Course")
 
 // Create Rating and Review
-exports.createRating = async (req, res) => {
+exports.createRatingAndReview = async (req, res) => {
     try {
+        // get data (rating, review, course id) from request body
+        const { rating, review, courseId } = req.body
+
         // get user id from req.user (from auth middleware)
         const userId = req.user.id
-
-        // get data from request body
-        const { rating, review, courseId } = req.body
 
         // validation of the data
         if (!rating || !review || !courseId) {
@@ -19,28 +19,30 @@ exports.createRating = async (req, res) => {
         }
 
         // check if the user is enrolled to the course or not
-        const courseDetails = await Course.findById(
+        const enrolledCourse = await Course.findById(
             { _id: courseId },
             {
                 studentsEnrolled: { $elemMatch: { $eq: userId } }
-            })
-        if (!courseDetails) {
+            },
+            { new: true }
+        )
+        if (!enrolledCourse) {
             return res.status(400).json({
                 success: false,
-                message: "Course is not found"
+                message: "You are not enrolled to this course"
             })
         }
 
-        // check if the user already reviewed the course or not
-        const alreadyReviewed = await RatingAndReview.findOne({ user: userId, course: courseId })
-        if(alreadyReviewed){
+        // check if the user already rated the course or not
+        const isCourseAlreadyRated = await RatingAndReview.findOne({ user: userId, course: courseId })
+        if (!isCourseAlreadyRated) {
             return res.status(400).json({
                 success: false,
-                message: "You have already reviewed the course"
+                message: "You have already rated and reviewed this course"
             })
         }
 
-        // create the rating and review
+        // create an rating and review
         const ratingreview = await RatingAndReview.create({
             rating,
             review,
@@ -48,19 +50,19 @@ exports.createRating = async (req, res) => {
             course: courseId
         })
 
-        // update the rating and review to the course in db
-        await Course.findByIdAndUpdate(
-            {_id: courseId},
+        // update the rating and review to the course
+        const updatedCourse = await Course.findByIdAndUpdate(
+            { _id: courseId },
             {
-                $push: {ratingAndReviews: ratingreview._id}
-           },
-           {new: true}
+                $push: { ratingAndReviews: ratingreview._id }
+            },
+            { new: true }
         )
 
         // return the response
         return res.status(200).json({
-            success: true,
-            message: "Rating and review added successfully",
+            success: false,
+            message: "Rating and review given successfully",
             ratingreview
         })
 
@@ -75,4 +77,40 @@ exports.createRating = async (req, res) => {
 }
 
 // Get Average Rating
+exports.averageRating = async (req, res) => {
+    try {
+        // get course id from request body
+        const {courseId} = req.body
+
+        // validation of the data
+        if(!courseId){
+            return res.status(400).json({
+                success: false,
+                message: "Course id is required"
+            })
+        }
+
+        // check if the course exists in the db or not
+        const course = await Course.findById({_id: courseId})
+        if(!course){
+            return res.status(400).json({
+                success: false,
+                message: "Course is not found"
+            })
+        }
+
+        // calculate the average rating
+        
+
+        // return the response
+    } catch (err) {
+        console.log(err.message);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while getting average rating",
+            error: err.message
+        })
+    }
+}
+
 // Get All Ratings
