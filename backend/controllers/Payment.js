@@ -11,13 +11,13 @@ const crypto = require("crypto")
 // Capture Payment (Create an Order)
 exports.capturePayment = async (req, res) => {
     try {
-        // get courseId from request body
+        // get course id from request body
         const { courseId } = req.body
 
         // get user id from req.user (from auth middleware)
         const userId = req.user.id
 
-        // validation of course id
+        // validation of the data
         if (!courseId) {
             return res.status(400).json({
                 success: false,
@@ -39,7 +39,7 @@ exports.capturePayment = async (req, res) => {
         if (course.studentsEnrolled.includes(convertedUserId)) {
             return res.status(400).json({
                 success: false,
-                message: "Student is already enrolled to the course"
+                message: "You have already bought this course"
             })
         }
 
@@ -73,17 +73,17 @@ exports.capturePayment = async (req, res) => {
     }
 }
 
-// Verify Signature (Verify the Payment)
+// Verify Signature (Payment is verified or not)
 exports.verifySignature = async (req, res) => {
     try {
         // get data from request body
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId } = req.body
+        const { razorpay_payment_id, razorpay_order_id, razorpay_signature, courseId } = req.body
 
         // get user id from req.user (from auth middleware)
         const userId = req.user.id
 
         // validation of the data
-        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !courseId) {
+        if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !courseId) {
             return res.status(400).json({
                 success: false,
                 message: "All fields are required"
@@ -98,8 +98,7 @@ exports.verifySignature = async (req, res) => {
             .digest("hex")
 
         if (expectedSignature === razorpay_signature) {
-
-            // find the course and enroll the student in it
+            // find the course and add the student to it for enrollment
             const enrolledCourse = await Course.findByIdAndUpdate(
                 { _id: courseId },
                 {
@@ -108,14 +107,15 @@ exports.verifySignature = async (req, res) => {
                 { new: true }
             )
 
+            // validation of the course
             if (!enrolledCourse) {
                 return res.status(400).json({
                     success: false,
-                    message: "Course is not found"
+                    message: "Enrolled course is not found"
                 })
             }
 
-            // find the user and add the course to their courses list
+            // find the student and add the course to it after enrollment
             const enrolledStudent = await User.findByIdAndUpdate(
                 { _id: userId },
                 {
@@ -127,12 +127,11 @@ exports.verifySignature = async (req, res) => {
             // send the mail
             await mailer(enrolledStudent.email, `Successfully Enrolled into ${enrolledCourse.courseName}`, courseEnrollment(enrolledCourse.courseName, `${enrolledStudent.firstName} ${enrolledStudent.lastName}`))
 
-            // return the response
+            // return the reponse
             return res.status(200).json({
-                success: true,
-                message: "Payment is verified"
+                success: false,
+                message: "Payment is verified successfully"
             })
-
         }
         else {
             return res.status(400).json({
