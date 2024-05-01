@@ -3,14 +3,14 @@ const express = require("express")
 const router = express.Router()
 
 // Import the required controllers and middleware functions
-const { contactUsController } = require("../controllers/ContactUs")
+const { contactUs } = require("../controllers/Contact")
 
 // ********************************************************************************************************
 //                                      Contact routes
 // ********************************************************************************************************
 
 // Route for contact form submission
-router.post("/contact", contactUsController)
+router.post("/contact", contactUs)
 
 // Export the router for use in the main application
 module.exports = router

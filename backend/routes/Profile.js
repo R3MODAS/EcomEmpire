@@ -3,7 +3,7 @@ const express = require("express")
 const router = express.Router()
 
 // Import the required controllers and middleware functions
-const { auth } = require("../middleware/auth")
+const { auth } = require("../middlewares/auth")
 const { updateProfile, deleteAccount, getAllUserDetails } = require("../controllers/Profile")
 
 // ********************************************************************************************************

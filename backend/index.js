@@ -12,17 +12,8 @@ cloudinary.config({
 })
 
 connectDB()
-    .then(() => {
+app.listen(PORT, () => {
+    console.log(`Server started at http://localhost:${PORT}`);
+})
 
-        app.on("error", (err) => {
-            console.log(`Error: `, err.message);
-            throw new Error(err.message)
-        })
 
-        app.listen(PORT, () => {
-            console.log(`Server started at http://localhost:${PORT}`);
-        })
-    })
-    .catch((err) => {
-        console.log(`MongoDB connection failed: `, err.message);
-    })
