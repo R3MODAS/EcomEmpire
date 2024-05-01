@@ -100,9 +100,16 @@ exports.averageRating = async (req, res) => {
         }
 
         // calculate the average rating
-        
+        const ratingreview = await RatingAndReview.find({course: courseId})
+        const totalRating = ratingreview.reduce((acc,curr) => curr.rating + acc, 0)
+        const averageRating = totalRating / ratingreview.length
 
         // return the response
+        return res.status(200).json({
+            success: true,
+            message: "Average rating is fetched successfully",
+            averageRating
+        })
     } catch (err) {
         console.log(err.message);
         return res.status(500).json({
@@ -114,3 +121,34 @@ exports.averageRating = async (req, res) => {
 }
 
 // Get All Ratings
+exports.getAllRatingAndReview = async (req,res) => {
+    try {
+        // find all the rating and reviews
+        const allRatingReviews = await RatingAndReview.find({})
+        .sort({rating: "desc"})
+        .populate({
+            path: "user",
+            select: "firstName lastName email image"
+        })
+        .populate({
+            path: "course",
+            select: "courseName"
+        })
+        .exec()
+
+        // return the response
+        return res.status(200).json({
+            success: true,
+            message: "Got all the ratings and reviews successfully",
+            allRatingReviews
+        })
+
+    } catch (err) {
+        console.log(err.message);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while fetching all the ratings",
+            error: err.message
+        })
+    }
+}
