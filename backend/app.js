@@ -29,15 +29,11 @@ app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/contact", contactRoutes);
 
 // Default Route
-app.use("/", (req,res) => {
+app.get("/", (req,res) => {
     return res.status(200).json({
         success: true,
         message: "Server is up and running..."
     })
-})
-
-app.all('*', (req, res) => {
-    res.status(404).send("OOPS!! 404 page not found")
 })
 
 module.exports = app

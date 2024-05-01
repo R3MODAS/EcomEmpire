@@ -3,7 +3,7 @@ const cloudinary = require("cloudinary").v2
 const connectDB = require("./db/index")
 process.loadEnvFile()
 
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 8000
 
 cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
