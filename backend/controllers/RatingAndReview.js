@@ -2,7 +2,7 @@ const RatingAndReview = require("../models/RatingAndReview")
 const Course = require("../models/Course")
 
 // Create Rating and Review
-exports.createRatingAndReview = async (req, res) => {
+exports.createRatingReview = async (req, res) => {
     try {
         // get data (rating, review, course id) from request body
         const { rating, review, courseId } = req.body
@@ -121,7 +121,7 @@ exports.averageRating = async (req, res) => {
 }
 
 // Get All Ratings
-exports.getAllRatingAndReview = async (req,res) => {
+exports.getAllRatingReview = async (req,res) => {
     try {
         // find all the rating and reviews
         const allRatingReviews = await RatingAndReview.find({})

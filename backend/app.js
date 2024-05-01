@@ -2,7 +2,13 @@ const express = require("express")
 const cookieParser = require("cookie-parser")
 const cors = require("cors")
 const fileUpload = require("express-fileupload")
-const UserRouter = require("./routes/User")
+
+// Import the Defined Routes
+const userRoutes = require("./routes/User")
+const profileRoutes = require("./routes/Profile")
+const contactRoutes = require("./routes/Contact")
+const paymentRoutes = require("./routes/Payment")
+const courseRoutes = require("./routes/Course")
 
 const app = express()
 
@@ -12,10 +18,22 @@ app.use(cookieParser())
 app.use(cors())
 app.use(fileUpload({
     useTempFiles: true,
-    tempFileDir: '/tmp/'
+    tempFileDir: '/tmp'
 }))
 
 // Routes
-app.use("/", UserRouter)
+app.use("/api/v1/auth", userRoutes);
+app.use("/api/v1/profile", profileRoutes);
+app.use("/api/v1/course", courseRoutes);
+app.use("/api/v1/payment", paymentRoutes);
+app.use("/api/v1/contact", contactRoutes);
+
+// Default Route
+app.use("/", (req,res) => {
+    return res.status(200).json({
+        success: true,
+        message: "Server is up and running..."
+    })
+})
 
 module.exports = app
