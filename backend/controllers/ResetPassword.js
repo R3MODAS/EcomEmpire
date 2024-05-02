@@ -40,7 +40,7 @@ exports.ResetPasswordToken = async (req, res) => {
         )
 
         // create an url for user to reset password
-        const url = `http://localhost:${process.env.PORT}/reset-password/${token}`
+        const url = `http://localhost:${process.env.PORT}/api/v1/auth/reset-password/${token}`
 
         // send the mail to the user
         await mailer(email, `Reset Password Link | StudyNotion`, `Your Link for reset password is ${url}. Please click this url to reset your password.`)

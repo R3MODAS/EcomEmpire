@@ -5,15 +5,12 @@ const { verifyEmail } = require("../mail/verifyEmail")
 const otpSchema = new mongoose.Schema({
     otp: {
         type: String,
-        trim: true,
         required: true,
         unique: true
     },
     email: {
         type: String,
-        trim: true,
-        required: true,
-        unique: true
+        required: true
     },
     createdAt: {
         type: Date,

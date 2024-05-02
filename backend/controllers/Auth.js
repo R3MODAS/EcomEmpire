@@ -39,7 +39,7 @@ exports.SendOtp = async (req, res) => {
         })
 
         // validation for unique otp
-        let result = Otp.findOne({ otp: otp })
+        let result = await Otp.findOne({ otp: otp })
         while (result) {
             otp = otpGenerator.generate(6, {
                 lowerCaseAlphabets: false,

@@ -21,10 +21,10 @@ router.post("/login", Login)
 router.post("/signup", Signup)
 
 // Route for sending OTP to the user's email
-router.post("/sendotp", SendOtp)
+router.post("/send-otp", SendOtp)
 
 // Route for changing the password
-router.post("/changepassword", auth, ChangePassword)
+router.post("/change-password", auth, ChangePassword)
 
 // ********************************************************************************************************
 //                                      Reset Password

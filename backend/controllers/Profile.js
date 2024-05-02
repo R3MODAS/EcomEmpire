@@ -2,12 +2,13 @@ const User = require("../models/User")
 const Profile = require("../models/Profile")
 const Course = require("../models/Course")
 const mongoose = require("mongoose")
+const {cloudinaryUploader} = require("../utils/cloudinaryUploader")
 
 // Update Profile
 exports.updateProfile = async (req, res) => {
     try {
         // get data from request body
-        const { firstName = "", lastName = "", gender = "", about = "", dateOfBirth = "", contactNumber = "" } = req.body
+        const {gender = "", about = "", dateOfBirth = "", contactNumber = "" } = req.body
 
         // get the user id from req.user (from auth middleware)
         const userId = req.user.id
@@ -17,13 +18,6 @@ exports.updateProfile = async (req, res) => {
 
         // get the profile details of the user
         const profileDetails = await Profile.findById({ _id: userDetails.additionalDetails })
-
-        // update the user
-        await User.findByIdAndUpdate(
-            { _id: userDetails._id },
-            { firstName, lastName },
-            { new: true }
-        )
 
         // update the profile
         await Profile.findByIdAndUpdate(
@@ -128,6 +122,53 @@ exports.getAllUserDetails = async (req,res) => {
         return res.status(500).json({
             success: false,
             message: "Something went wrong while fetching all the user details",
+            error: err.message
+        })
+    }
+}
+
+// Update Display Picture
+exports.updateDisplayPicture = async (req,res) => {
+    try {
+        
+        // get the image from request files
+        const displayPicture = req.files.displayPicture
+
+        // get the user id from req.user (from auth middleware)
+        const userId = req.user.id
+
+        // validation of the data
+        if(!req.files.displayPicture){
+            return res.status(400).json({
+                success: false,
+                message: "Picture is required"
+            })
+        }
+
+        // upload the image to cloudinary
+        const image = await cloudinaryUploader(displayPicture, process.env.FOLDER_NAME, 1000, 1000)
+
+        // update the image
+        const updatedProfile = await User.findByIdAndUpdate(
+            {_id: userId},
+            {image: image.secure_url},
+            {new: true}
+        )
+
+        updatedProfile.password = undefined
+
+        // return the response
+        return res.status(200).json({
+            success: true,
+            message: "Display picture updated successfully",
+            updatedProfile
+        })
+
+    } catch (err) {
+        console.log(err.message)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while updating the profile picture",
             error: err.message
         })
     }
