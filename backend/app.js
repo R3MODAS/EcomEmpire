@@ -35,7 +35,7 @@ app.use("/api/v1/contact", contactRoutes);
 app.get("/", (req,res) => {
     return res.status(200).json({
         success: true,
-        message: "Server is up and running..."
+        message: "Welcome to the StudyNotion Backend"
     })
 })
 
