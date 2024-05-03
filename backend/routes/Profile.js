@@ -14,7 +14,7 @@ const { updateProfile, deleteAccount, getAllUserDetails, updateDisplayPicture } 
 router.put("/updateProfile", auth, updateProfile)
 
 // Route for delete user account
-router.delete("/deleteProfile", deleteAccount)
+router.delete("/deleteProfile", auth, deleteAccount)
 
 // Route for getting user details
 router.get("/getUserDetails", auth, getAllUserDetails)

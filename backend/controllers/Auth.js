@@ -209,8 +209,8 @@ exports.Login = async (req, res) => {
         res.cookie("token", token, options).status(200).json({
             success: true,
             message: "User logged in successfully",
-            user,
-            token
+            token,
+            user
         })
     }
     catch (err) {

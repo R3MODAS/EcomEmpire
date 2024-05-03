@@ -8,10 +8,10 @@ const { cloudinaryUploader } = require("../utils/cloudinaryUploader")
 exports.createCourse = async (req, res) => {
     try {
         // get data from request body
-        const { courseName, courseDescription, whatYouWillLearn, price, tag, category, status, instructions } = req.body;
+        let { courseName, courseDescription, whatYouWillLearn, price, tag, category, status, instructions } = req.body;
 
         // get thumbnail from request files
-        const thumbnail = req.files.thumbnailImage
+        let thumbnail = req.files.thumbnailImage
 
         // get user id from req.user (from auth middleware)
         const userId = req.user.id
