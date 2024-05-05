@@ -4,8 +4,8 @@ module.exports = {
   theme: {
     fontFamily: {
       inter: ["Inter", "sans-serif"],
-      "edu-sa": ["Edu SA Beginner", "cursive"],
-      mono: ["Roboto Mono", "monospace"],
+      roboto: ["Roboto", "sans-serif"],
+      edusans: ["Edu SA Beginner", "cursive"]
     },
     colors: {
       white: "#fff",
