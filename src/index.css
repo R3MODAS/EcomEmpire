@@ -72,9 +72,11 @@ body {
     border-image-slice: 1;
     border-width: 2px;
     border-image-source: linear-gradient(to right bottom, #ffffff38, #ffffff00);
-    background: linear-gradient(
-      111.93deg,
-      rgba(14, 26, 45, 0.24) -1.4%,
-      rgba(17, 30, 50, 0.38) 104.96%
-    );
-  }
+    background: linear-gradient(111.93deg,
+            rgba(14, 26, 45, 0.24) -1.4%,
+            rgba(17, 30, 50, 0.38) 104.96%);
+}
+
+.homepage_bg {
+    background: url("../src/assets/Images/bghome.svg");
+}
