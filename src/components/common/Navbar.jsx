@@ -7,7 +7,7 @@ import ProfileDropdown from "../core/Auth/ProfileDropdown"
 import { ACCOUNT_TYPE } from "../../utils/constants"
 import { useEffect, useState } from "react"
 import { apiConnector } from "../../services/apiConnector"
-import { categories } from "../../services/allApi"
+import { categories } from "../../services/apis"
 import { BsChevronDown } from "react-icons/bs"
 
 const Navbar = () => {
@@ -27,7 +27,6 @@ const Navbar = () => {
   const fetchAllCategories = async () => {
     try {
       const res = await apiConnector("GET", categories.CATEGORIES_API)
-      console.log(res)
       setSubLinks()
     } catch (err) {
       console.log(err.message)

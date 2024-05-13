@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom"
-import { Home } from "./pages"
+import { Home, Login, Signup } from "./pages"
 import Navbar from "./components/common/Navbar"
+import OpenRoute from "./components/core/Auth/OpenRoute"
 
 function App() {
   return (
@@ -8,6 +9,8 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/signup" element={<OpenRoute><Signup /></OpenRoute>} />
+        <Route path="/login" element={<OpenRoute><Login /></OpenRoute>} />
       </Routes>
     </div>
   )
