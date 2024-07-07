@@ -3,9 +3,12 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Loader from "./components/loader";
 import Header from "./components/header";
 
+// User Routes
 const Home = lazy(() => import("./pages/home"));
 const Search = lazy(() => import("./pages/search"));
 const Cart = lazy(() => import("./pages/cart"));
+const Shipping = lazy(() => import("./pages/shipping"));
+const Login = lazy(() => import("./pages/login"));
 
 // Admin Routes
 const Dashboard = lazy(() => import("./pages/admin/dashboard"));
@@ -36,16 +39,17 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<Search />} />
           <Route path="/cart" element={<Cart />} />
+
+          {/* Not Logged In User Routes */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Logged In User Routes */}
+          <Route>
+            <Route path="/shipping" element={<Shipping />} />
+          </Route>
+
           {/* Admin Routes */}
-          <Route
-          // element={
-          //   <ProtectedRoute
-          //     isAuthenticated={true}
-          //     adminRoute={true}
-          //     isAdmin={true}
-          //   />
-          // }
-          >
+          <Route>
             <Route path="/admin/dashboard" element={<Dashboard />} />
             <Route path="/admin/product" element={<Products />} />
             <Route path="/admin/customer" element={<Customers />} />
@@ -61,15 +65,12 @@ const App = () => {
 
             {/* Management */}
             <Route path="/admin/product/new" element={<NewProduct />} />
-
             <Route path="/admin/product/:id" element={<ProductManagement />} />
-
             <Route
               path="/admin/transaction/:id"
               element={<TransactionManagement />}
             />
           </Route>
-          ;
         </Routes>
       </Suspense>
     </Router>

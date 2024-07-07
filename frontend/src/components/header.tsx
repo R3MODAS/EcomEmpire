@@ -2,13 +2,13 @@ import { Link } from "react-router-dom";
 import {
   FaSearch,
   FaShoppingBag,
-  FaSignInAlt,
   FaSignOutAlt,
   FaUser,
+  FaUserAlt,
 } from "react-icons/fa";
 import { useState } from "react";
 
-const user = { _id: "123", role: "admin" };
+const user = { _id: "", role: "" };
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -29,7 +29,7 @@ const Header = () => {
         <FaShoppingBag />
       </Link>
 
-      {user._id ? (
+      {user?._id ? (
         <>
           <button onClick={() => setIsOpen((prev) => !prev)}>
             <FaUser />
@@ -37,12 +37,12 @@ const Header = () => {
           <dialog open={isOpen}>
             <div>
               {user.role === "admin" && (
-                <Link onClick={() => setIsOpen(false)} to={"/admin/dashboard"}>
+                <Link onClick={() => setIsOpen(false)} to="/admin/dashboard">
                   Admin
                 </Link>
               )}
 
-              <Link onClick={() => setIsOpen(false)} to={"/orders"}>
+              <Link onClick={() => setIsOpen(false)} to="/orders">
                 Orders
               </Link>
               <button onClick={logoutHandler}>
@@ -53,7 +53,7 @@ const Header = () => {
         </>
       ) : (
         <Link to={"/login"}>
-          <FaSignInAlt />
+          <FaUserAlt />
         </Link>
       )}
     </nav>
