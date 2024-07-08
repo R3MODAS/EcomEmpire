@@ -47,6 +47,7 @@ $color3: rgb(0, 104, 136);
 @import "cart";
 @import "shipping";
 @import "login";
+@import "search";
 @import "admin/dashboard";
 @import "admin/products";
 @import "admin/chart";
@@ -59,7 +60,7 @@ $color3: rgb(0, 104, 136);
   margin: auto;
   overflow: auto;
 
-  >h1 {
+  > h1 {
     @include heading;
     margin: 1rem 0;
     text-align: left;
@@ -75,6 +76,8 @@ $color3: rgb(0, 104, 136);
 .header {
   @include flex(row, flex-end, stretch, 1.2rem);
   padding: 1rem;
+  @include baseShadow;
+  background-color: white;
 
   a {
     color: $color2;
@@ -104,9 +107,9 @@ $color3: rgb(0, 104, 136);
     width: 100px;
     position: absolute;
     left: calc(100% - 110px);
-    top: 5%;
+    top: 7%;
 
-    >div {
+    > div {
       @include flex(column, flex-start, center, 0.25rem);
     }
   }
@@ -116,7 +119,7 @@ $color3: rgb(0, 104, 136);
   height: 80vh;
   @include flex(column);
 
-  >svg {
+  > svg {
     font-size: 5rem;
   }
 }
@@ -126,10 +129,10 @@ $color3: rgb(0, 104, 136);
   width: 100%;
   margin: auto;
 
-  >form {
+  > form {
     @include flex(column, flex-start, stretch, 2rem);
 
-    >button {
+    > button {
       @include btn(1rem, $color3, $color1);
       width: 100%;
       font-size: 1.1rem;
@@ -142,7 +145,7 @@ $color3: rgb(0, 104, 136);
   height: 100vh;
   background-color: rgb(247, 247, 247);
 
-  >aside {
+  > aside {
     width: 100%;
     background-color: white;
     padding: 1rem;
@@ -153,20 +156,20 @@ $color3: rgb(0, 104, 136);
       display: none;
     }
 
-    >div {
+    > div {
       margin: 2rem 1rem;
 
-      >h5 {
+      > h5 {
         @include heading(2px);
         opacity: 0.8;
         margin: 1rem 0;
       }
 
-      >ul {
+      > ul {
         @include flex(column, unset, unset, 0.5rem);
         list-style: none;
 
-        >li {
+        > li {
           padding: 0.5rem 1rem;
           border-radius: 10px;
 
@@ -252,7 +255,7 @@ $color3: rgb(0, 104, 136);
   @include flex;
   padding: 2rem;
 
-  >button {
+  > button {
     padding: 0.5rem 1rem;
     border: none;
     outline: none;
@@ -303,7 +306,7 @@ $color3: rgb(0, 104, 136);
   height: 85vh;
   @include flex;
 
-  >div {
+  > div {
     @include square(10rem);
     border-radius: 50%;
     border-top: 1rem solid rgb(43, 43, 43);
