@@ -12,6 +12,7 @@ interface User extends Document {
     dob: Date;
     createdAt: Date;
     updatedAt: Date;
+    age: number; // Virtual data
 }
 
 const userSchema: Schema<User> = new Schema(
@@ -30,7 +31,7 @@ const userSchema: Schema<User> = new Schema(
             unique: true,
             trim: true,
             required: [true, "Please provide a email"],
-            validate: validator.default.isEmail
+            validate: validator.default.isEmail,
         },
         photo: {
             type: String,
@@ -54,5 +55,19 @@ const userSchema: Schema<User> = new Schema(
     { timestamps: true }
 );
 
-const UserModel = mongoose.model("User", userSchema);
+userSchema.virtual("age").get(function () {
+    const today = new Date();
+    const dob = this.dob;
+    let age = today.getFullYear() - dob.getFullYear();
+
+    if (
+        today.getMonth() < dob.getMonth() ||
+        (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())
+    ) {
+        age--;
+    }
+    return age;
+});
+
+const UserModel = mongoose.model<User>("User", userSchema);
 export default UserModel;
